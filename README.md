@@ -9,6 +9,10 @@ prefer rollup.js.
 
 Clone this repo and link it with npm to your development environment.
 
+```
+npm install
+```
+
 ## Dependencies
 
 See `package.json`.
