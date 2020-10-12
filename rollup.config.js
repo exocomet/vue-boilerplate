@@ -7,6 +7,8 @@ export default [{
   external: [
     'vue',
     'vuex',
+    'vue-router',
+    // 'axios',
   ],
   input: "./src/index.js",
   output: {
@@ -16,6 +18,8 @@ export default [{
     globals: {
       'vue': 'Vue',
       'vuex': 'Vuex',
+      'vue-router': 'VueRouter',
+      // 'axios': 'axios',
     },
   },
   plugins: [
