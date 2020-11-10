@@ -20,6 +20,16 @@ npm install
 npm run build
 ```
 
+## Testing
+
+### Python webserver
+
+Python? Why? Because I can.
+
+```bash
+npm run server
+```
+
 ### Unit testing
 
 Code testing is done with [AVA](https://github.com/avajs/ava). It is necessary to install the

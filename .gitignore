@@ -1,3 +1,21 @@
 build/
 node_modules/
 local/
+
+## python webserver reference implementation
+__pycache__
+*.py[cod]
+
+## ignore local settings file, took over Django convention
+local_settings.py
+
+## cypress
+cypress/integration/examples
+cypress/videos
+cypress/screenshots
+
+## vscode bug, creates debug.log files in random places
+## https://github.com/microsoft/vscode/issues/105191
+## should be fixed in later versions...
+debug.log
+*/debug.log

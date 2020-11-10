@@ -1,4 +1,4 @@
-(function (Vue, VueRouter$1, Vuex) {
+(function (Vue, VueRouter$1, Vuex, axios) {
   'use strict';
 
   function _interopDefaultLegacy (e) { return e && typeof e === 'object' && 'default' in e ? e : { 'default': e }; }
@@ -6,6 +6,7 @@
   var Vue__default = /*#__PURE__*/_interopDefaultLegacy(Vue);
   var VueRouter__default = /*#__PURE__*/_interopDefaultLegacy(VueRouter$1);
   var Vuex__default = /*#__PURE__*/_interopDefaultLegacy(Vuex);
+  var axios__default = /*#__PURE__*/_interopDefaultLegacy(axios);
 
   const SET_VALUE = 'SET_VALUE';
 
@@ -246,17 +247,84 @@
       undefined
     );
 
+  // WARNING: this is a very hacky solution for dynamic base URLs
+  //  want to avoid individual builds for each deployment...
+  //  this solution seems better than injecting the base URL from
+  //  the webserver into the template.
+  const getWebRoot = function() {
+    const urlPath = document.location.pathname;
+    return urlPath.split('/')[0] + '/'
+  };
+
+  // https://www.digitalocean.com/community/tutorials/vuejs-rest-api-axios
+  // https://www.codementor.io/@capocaccia/keeping-axios-where-it-belongs-o6xidrkrk
+
+  const httpClient = axios__default['default'].create({
+    baseURL: getWebRoot(),
+    headers: {
+      // Authorization: 'Bearer {token}'
+    }
+  });
+
+  // see the documentation for request config object
+  // https://github.com/axios/axios#request-config
+  const baseService = {
+    item: {
+      load(config) {
+        // {params: {uid: ....}}
+        return httpClient.get('/load', config)
+      },
+      save(data, config) {
+        // data is stringified JSON {...}
+        let cfg = config || {};
+        cfg.headers = {
+          // in case of JSON axios DOES NOT ALLOW to specify a charset, even if it is UTF-8.
+          // this would result in broken POST requests (empty body, but data in one of the
+          // request params keys)
+          'Content-Type': 'application/json'
+        };
+        return httpClient.post('/save', data, config)
+      },
+      show(config) {
+        return httpClient.get('/show', config)
+      },
+    },
+  };
+
   //
-  //
-  //
-  //
-  //
-  //
-  //
+
+  var axiosStandardCatch = function (error) {
+    if (error.response) {
+      // The request was made and the server responded with a status code
+      // that falls out of the range of 2xx
+      // console.log(error.response.data);
+      console.log(error.response.status);
+      console.log(error.response.headers);
+    } else if (error.request) {
+      // The request was made but no response was received
+      // `error.request` is an instance of XMLHttpRequest in the browser and an instance of
+      // http.ClientRequest in node.js
+      console.log(error.request);
+    } else {
+      // Something happened in setting up the request that triggered an Error
+      console.log('Error', error.message);
+      throw error;
+    }
+  };
 
   var script$1 = {
     name: "Main",
+    data() {return {
+      item: undefined,
+    }},
     components: {},
+    methods: {
+      getItem() {
+        baseService.item.show().then(response => {
+          this.item = response.data;
+        }).catch(axiosStandardCatch);
+      }
+    },
   };
 
   /* script */
@@ -267,28 +335,27 @@
     var _vm = this;
     var _h = _vm.$createElement;
     var _c = _vm._self._c || _h;
-    return _vm._m(0)
-  };
-  var __vue_staticRenderFns__$1 = [
-    function() {
-      var _vm = this;
-      var _h = _vm.$createElement;
-      var _c = _vm._self._c || _h;
-      return _c("main", { staticClass: "main" }, [
-        _c("section", { staticClass: "flex two" }, [_c("h2", [_vm._v("Main")])])
+    return _c("main", { staticClass: "main" }, [
+      _c("section", { staticClass: "flex two" }, [
+        _c("h2", [_vm._v("Main")]),
+        _vm._v(" "),
+        _c("button", { on: { click: _vm.getItem } }, [_vm._v("Click")]),
+        _vm._v(" "),
+        _c("div", [_vm._v(_vm._s(_vm.item))])
       ])
-    }
-  ];
+    ])
+  };
+  var __vue_staticRenderFns__$1 = [];
   __vue_render__$1._withStripped = true;
 
     /* style */
     const __vue_inject_styles__$1 = function (inject) {
       if (!inject) return
-      inject("data-v-7aa85ad8_0", { source: "\n\n\n\n\n\n\n\n\n\n\n\n\n\n", map: {"version":3,"sources":[],"names":[],"mappings":"","file":"Main.vue"}, media: undefined });
+      inject("data-v-d4e9f1fe_0", { source: "\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n", map: {"version":3,"sources":[],"names":[],"mappings":"","file":"Main.vue"}, media: undefined });
 
     };
     /* scoped */
-    const __vue_scope_id__$1 = "data-v-7aa85ad8";
+    const __vue_scope_id__$1 = "data-v-d4e9f1fe";
     /* module identifier */
     const __vue_module_identifier__$1 = undefined;
     /* functional template */
@@ -393,12 +460,27 @@
 
   const appRouter = new VueRouter({
     mode: 'history',
+    base: getWebRoot(),
     routes,
     scrollBehavior (to, from, savedPosition) {
       if (savedPosition) {
         return savedPosition
       }
       return { x: 0, y: 0 }
+    }
+  });
+
+  function hasQueryParams(route) {
+    return !!Object.keys(route.query).length
+  }
+
+  appRouter.beforeEach((to, from, next) => {
+    // let toWithQuery = Object.assign({}, to, {query: from.query});
+    // next(toWithQuery);
+    if(!hasQueryParams(to) && hasQueryParams(from)){
+      next({name: to.name, query: from.query});
+    } else {
+      next();
     }
   });
 
@@ -410,4 +492,4 @@
     render: h => h(__vue_component__),
   }).$mount('#app');
 
-}(Vue, VueRouter, Vuex));
+}(Vue, VueRouter, Vuex, axios));
